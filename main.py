@@ -44,7 +44,7 @@ def handler(event, context):
     for obj in bucket.list_blobs():
         model = pickle.loads(obj.download_as_bytes())
         prediction = model.predict(pre_df)
-        model_type = re.match('^model_(.+)\.pkl$', obj.path).group(1)
+        model_type = re.match('^model_(.+)\.pkl$', obj.name).group(1)
         prediction_series = pd.Series(prediction, index = pre_df.index, name = f'PredShare_{model_type}')
         predictions_list.append(prediction_series)
 
