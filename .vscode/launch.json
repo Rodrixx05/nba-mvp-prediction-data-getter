@@ -1,0 +1,16 @@
+{
+  "configurations": [
+    {
+      "name": "Deploy Cloud Function",
+      "type": "cloudcode.cloudfunctions",
+      "request": "launch",
+      "functionName": "nba-mvp-prediction-data-getter",
+      "region": "us-east1",
+      "gen": "GEN_2",
+      "revision": "nba-mvp-prediction-data-getter-00003-vip",
+      "entryPoint": "handler",
+      "runtime": "python38",
+      "testInput": ""
+    }
+  ]
+}
