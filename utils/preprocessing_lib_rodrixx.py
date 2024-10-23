@@ -8,16 +8,16 @@ class DropPlayersMultiTeams(BaseEstimator, TransformerMixin):
     def __init__(self):
         pass
 
-    def _check_rk_season(self, df, rk_season_pairs):
-        return df.apply(lambda x: (x['Rk'], x['Season']) in rk_season_pairs, axis = 1)
+    def _check_player_season(self, df, player_season_pairs):
+        return df.apply(lambda x: (x['Player'], x['Season']) in player_season_pairs, axis = 1)
         
     def fit(self, X, y = None):
         return self
     
     def transform(self, X, y = None):   
         df_tot = X[X['Tm'] == 'TOT']
-        rk_season_pairs = list(zip(df_tot['Rk'], df_tot['Season']))
-        df_tot_full = X[self._check_rk_season(X, rk_season_pairs)]
+        player_season_pairs = list(zip(df_tot['Player'], df_tot['Season']))
+        df_tot_full = X[self._check_player_season(X, player_season_pairs)]
         drop_index = df_tot_full[df_tot_full['Tm'] != 'TOT'].index
         return X.drop(drop_index).reset_index(drop = True)
 
@@ -40,7 +40,7 @@ class SetIndex(BaseEstimator, TransformerMixin):
         return self
     
     def transform(self, X, y = None):
-        return X.set_index(['Rk', 'Season'], drop = False)
+        return X.set_index(['Player', 'Season'], drop = False)
 
 class DropPlayers(BaseEstimator, TransformerMixin):
     def __init__(self):

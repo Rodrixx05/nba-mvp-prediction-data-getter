@@ -23,7 +23,7 @@ def handler(event, context):
     raw_df = getter.extract_player_stats_multiple(season, mvp = False, advanced = True, ranks = True)
 
     cols_tot = [col for col in raw_df.columns if '_tot' in col]
-    cols_to_drop = ['Rk', 'G', 'GS', 'GT', 'Tm']
+    cols_to_drop = ['G', 'GS', 'GT', 'Tm']
     cols_to_drop += cols_tot
     col_to_ohe = 'Pos'
 

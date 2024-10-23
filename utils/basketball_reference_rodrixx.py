@@ -1,4 +1,3 @@
-from unidecode import unidecode
 from bs4 import BeautifulSoup, Comment
 import requests
 import pandas as pd
@@ -74,7 +73,7 @@ class BasketballReferenceGetter():
         """
         if pd.isna(series['%W']):
             tot_gp = series['G']
-            sub_df = df[(df['Rk'] == series['Rk']) & (df['Tm'] != 'TOT')]
+            sub_df = df[(df['Player'] == series['Player']) & (df['Tm'] != 'TOT')]
             new_pct = round(((sub_df['G'] * sub_df['%W']).sum() / tot_gp), 3)
             series['%W'] = new_pct
             series['GT'] = sub_df['GT'].max()
@@ -94,6 +93,15 @@ class BasketballReferenceGetter():
         else:
             return object
 
+    def _cast_numeric_columns(self, df):
+        # Iterate over each column in the dataframe
+        for col in df.columns:
+            # Convert the column to numeric values if all values can be converted
+            if pd.to_numeric(df[col], errors='coerce').notna().all():
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+        return df
+
 
     """
     Public Functions
@@ -105,13 +113,14 @@ class BasketballReferenceGetter():
             response = requests.get(url)
             if response.status_code != 200:
                 return response.status_code
+            response.encoding = 'utf-8'
             
             soup = BeautifulSoup(response.text, features = "lxml")
             table_header = soup.find('table', {'id': 'per_game_stats'}).find('thead')
             header = [row.text for row in table_header.find_all('th')]
 
             table_body = soup.find('table', {'id': 'per_game_stats'}).find('tbody')
-            rows = table_body.find_all('tr', {'class': ['full_table', 'italic_text partial_table']})
+            rows = table_body.find_all('tr', class_ = lambda c: c is None or c == 'partial_table')
             players = []
             for row in rows:
                 player_data = [stat.text for stat in row.find_all(['td', 'th'])]
@@ -120,15 +129,19 @@ class BasketballReferenceGetter():
             df_player_stats_pg = pd.DataFrame(players)
             df_player_stats_pg.columns = header
 
-            df_player_stats_pg['GS'].replace('', '-10', inplace = True)
+            df_player_stats_pg.drop(columns = ['Awards', 'Rk'], inplace = True)
+            df_player_stats_pg.rename(columns = {'Team': 'Tm'}, inplace = True)
+            df_player_stats_pg['Tm'] = df_player_stats_pg['Tm'].replace(to_replace = '\dTM', value = 'TOT', regex = True)
+
+            df_player_stats_pg['GS'] = df_player_stats_pg['GS'].replace('', '-10')
             df_player_stats_pg.replace('', '0', inplace = True)
 
-            df_player_stats_pg = df_player_stats_pg.apply(pd.to_numeric, errors = 'ignore')
+            df_player_stats_pg = self._cast_numeric_columns(df_player_stats_pg)
 
             df_player_stats_pg['Player'] = df_player_stats_pg['Player'].str.strip('*')
 
             if ranks:
-                df_player_stats_pg = self._create_ranks(df_player_stats_pg, 7)
+                df_player_stats_pg = self._create_ranks(df_player_stats_pg, 6)
 
             df_player_stats_pg['%GS'] = np.where(df_player_stats_pg['GS'] >= 0, round(df_player_stats_pg['GS'] / df_player_stats_pg['G'], 3), -1)
 
@@ -145,13 +158,14 @@ class BasketballReferenceGetter():
             response = requests.get(url)
             if response.status_code != 200:
                 return response.status_code
+            response.encoding = 'utf-8'
             
             soup = BeautifulSoup(response.text, features = "lxml")
             table_header = soup.find('table', {'id': 'totals_stats'}).find('thead')
             header = [row.text for row in table_header.find_all('th')]
 
             table_body = soup.find('table', {'id': 'totals_stats'}).find('tbody')
-            rows = table_body.find_all('tr', {'class': ['full_table', 'italic_text partial_table']})
+            rows = table_body.find_all('tr', class_ = lambda c: c is None or c == 'partial_table')
             players = []
             for row in rows:
                 player_data = [stat.text for stat in row.find_all(['td', 'th'])]
@@ -160,15 +174,19 @@ class BasketballReferenceGetter():
             df_player_stats_totals = pd.DataFrame(players)
             df_player_stats_totals.columns = header
 
-            df_player_stats_totals['GS'].replace('', '-10', inplace = True)
+            df_player_stats_totals.drop(columns = ['Awards', 'Rk'], inplace = True)
+            df_player_stats_totals.rename(columns = {'Team': 'Tm'}, inplace = True)
+            df_player_stats_totals['Tm'] = df_player_stats_totals['Tm'].replace(to_replace = '\dTM', value = 'TOT', regex = True)
+
+            df_player_stats_totals['GS']=  df_player_stats_totals['GS'].replace('', '-10')
             df_player_stats_totals.replace('', '0', inplace = True)
 
-            df_player_stats_totals = df_player_stats_totals.apply(pd.to_numeric, errors = 'ignore')
+            df_player_stats_totals = self._cast_numeric_columns(df_player_stats_totals)
 
             df_player_stats_totals['Player'] = df_player_stats_totals['Player'].str.strip('*')
 
             if ranks:
-                df_player_stats_totals = self._create_ranks(df_player_stats_totals, 7)
+                df_player_stats_totals = self._create_ranks(df_player_stats_totals, 6)
 
             df_player_stats_totals['Season'] = year
 
@@ -183,6 +201,7 @@ class BasketballReferenceGetter():
             response = requests.get(url)
             if response.status_code != 200:
                 return response.status_code
+            response.encoding = 'utf-8'
             
             soup = BeautifulSoup(response.text, features = "lxml")
             table_header = soup.find('table', {'id': 'advanced_stats'}).find('thead')
@@ -198,18 +217,18 @@ class BasketballReferenceGetter():
             df_player_stats_advanced = pd.DataFrame(players)
             df_player_stats_advanced.columns = header
 
-            df_player_stats_advanced.drop(columns = '\xa0', inplace = True)
+            df_player_stats_advanced.drop(columns = ['\xa0', 'Rk'], inplace = True)
 
             df_player_stats_advanced.replace('', '0', inplace = True)
 
-            df_player_stats_advanced = df_player_stats_advanced.apply(pd.to_numeric, errors = 'ignore')
+            df_player_stats_advanced = self._cast_numeric_columns(df_player_stats_advanced)
 
             df_player_stats_advanced['Player'] = df_player_stats_advanced['Player'].str.strip('*')
 
             df_player_stats_advanced.loc[:, 'ORB%':'USG%'] = df_player_stats_advanced.loc[:, 'ORB%':'USG%'] / 100
 
             if ranks:
-                df_player_stats_advanced = self._create_ranks(df_player_stats_advanced, 6)
+                df_player_stats_advanced = self._create_ranks(df_player_stats_advanced, 5)
 
             df_player_stats_advanced['Season'] = year
 
@@ -258,12 +277,12 @@ class BasketballReferenceGetter():
             if totals:
                 df_tot = self.extract_player_stats_totals(year, ranks)
                 df_tot.drop(columns = [col for col in df_tot.columns if col.startswith(('FG%', '3P%', '2P%', 'eFG%', 'FT%'))], inplace = True)
-                df_return = pd.merge(left = df_return, right = df_tot, how = 'inner', on = ['Rk', 'Player', 'Pos', 'Age', 'Tm', 'G', 'GS', 'Season'], suffixes = ['_pg', '_tot'])
+                df_return = pd.merge(left = df_return, right = df_tot, how = 'inner', on = ['Player', 'Pos', 'Age', 'Tm', 'G', 'GS', 'Season'], suffixes = ['_pg', '_tot'])
 
             if advanced:
                 df_adv = self.extract_player_stats_advanced(year, ranks)
                 df_adv.drop(columns = [col for col in df_tot.columns if col.startswith('MP')], inplace = True)
-                df_return = pd.merge(left = df_return, right = df_adv, how = 'inner', on = ['Rk', 'Player', 'Pos', 'Age', 'Tm', 'G', 'Season'])
+                df_return = pd.merge(left = df_return, right = df_adv, how = 'inner', on = ['Player', 'Pos', 'Age', 'Tm', 'G', 'Season'])
             
             if team_stats:
                 df_records = self._get_season_records(year)
