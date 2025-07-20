@@ -7,3 +7,4 @@ sqlalchemy==2.0.36
 lxml==4.9.4
 psycopg2-binary==2.9.10
 google-cloud-storage==2.18.2
+lightgbm==4.5.0

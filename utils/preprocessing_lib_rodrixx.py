@@ -40,7 +40,7 @@ class SetIndex(BaseEstimator, TransformerMixin):
         return self
     
     def transform(self, X, y = None):
-        return X.set_index(['Player', 'Season'], drop = False)
+        return X.set_index(['Player', 'Season'], drop = False).drop(columns = 'Season')
 
 class DropPlayers(BaseEstimator, TransformerMixin):
     def __init__(self):
@@ -65,6 +65,26 @@ class OHE(BaseEstimator, TransformerMixin):
         dummy_df = X[self.col_to_ohe].str.get_dummies(sep = '-').add_prefix(self.col_to_ohe + '_')
         X.drop(columns = self.col_to_ohe, inplace = True)
         return pd.concat([X, dummy_df], axis = 1)
+
+class AdjustCols(BaseEstimator, TransformerMixin):
+    def __init__(self, cols_to_adjust):
+        self.cols_to_adjust = cols_to_adjust
+    
+    def fit(self, X, y = None):
+        self.adjust_df = X[self.cols_to_adjust]
+        return self
+    
+    def transform(self, X, y = None):
+        for col in self.cols_to_adjust:
+            if col in ['OBPM, BPM']:
+                X.loc[X['%G'] < X['%G'].quantile(0.25), col] = -5
+            elif col == 'PER':
+                X.loc[X['%G'] < X['%G'].quantile(0.25), col] = 5
+            elif col == 'USG%':
+                X.loc[X['%G'] < X['%G'].quantile(0.25), col] = 0.05
+            elif col == 'WS/48':
+                X.loc[X['%G'] < X['%G'].quantile(0.25), col] = 0
+        return X
 
 class OutlierFilter(BaseEstimator, TransformerMixin):
     '''
