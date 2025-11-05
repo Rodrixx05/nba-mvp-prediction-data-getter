@@ -16,6 +16,7 @@ import utils.preprocessing_lib_rodrixx as prep
 models_bucket = os.environ.get('GCP_BUCKET_MODELS')
 season = int(os.environ.get('SEASON'))
 conn_url = os.environ.get('NBA_DB_CON')
+mvp_max_votes = int(os.environ.get('MVP_MAX_VOTES', '1000'))
 storage_client = storage.Client()
 
 def handler(event, context):
@@ -50,7 +51,7 @@ def handler(event, context):
     prediction_df = pd.concat(predictions_list, axis = 1)
     games_played_series = pre_df['%G']
 
-    post_df = post.get_processed_prediction(prediction_df, games_played_series, num_contenders = 15, max_votes = 1000)
+    post_df = post.get_processed_prediction(prediction_df, games_played_series, num_contenders = 15, max_votes = mvp_max_votes)
     post_df['Datetime'] = date.today()
 
     final_df = pd.concat([post_df, pre_df], axis = 1)
