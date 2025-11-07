@@ -37,4 +37,3 @@ def add_ohe_columns(base_df, ohe_series):
 
 def format_column_name(column):
     return column.upper().replace('%', '#')
-
