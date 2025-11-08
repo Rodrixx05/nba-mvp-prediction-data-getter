@@ -80,5 +80,8 @@ def pubsub_trigger(cloud_event):
     Args:
         cloud_event: The CloudEvent that was triggered by Pub/Sub.
     """
-    run_job()
+    try:
+        run_job()
+    except Exception as e:
+        print(f"Error capturado: {e}")
     return 'OK'
