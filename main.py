@@ -2,6 +2,7 @@ from datetime import datetime, date
 import os
 import re
 import pickle
+import functions_framework
 
 import pandas as pd
 from sklearn.pipeline import Pipeline
@@ -18,8 +19,16 @@ season = int(os.environ.get('SEASON'))
 conn_url = os.environ.get('NBA_DB_CON')
 mvp_max_votes = int(os.environ.get('MVP_MAX_VOTES', '1000'))
 storage_client = storage.Client()
+def run_job():
+    """Core job logic extracted so it can be invoked from different function signatures.
 
-def handler(event, context):
+    This performs the same work previously inside `handler`:
+    - fetches player stats
+    - preprocesses
+    - loads models from the configured GCS bucket
+    - predicts and postprocesses
+    - writes results to the configured SQL DB
+    """
     getter = brr.BasketballReferenceGetter()
     raw_df = getter.extract_player_stats_multiple(season, mvp = False, advanced = True, ranks = True)
 
@@ -62,3 +71,14 @@ def handler(event, context):
     conn = create_engine(conn_url)
 
     final_df.to_sql(f'stats_predictions_{season}', conn, if_exists = 'append', index = False)
+
+
+@functions_framework.cloud_event
+def pubsub_trigger(cloud_event):
+    """Cloud Function (2nd gen) entry point for Pub/Sub messages.
+    
+    Args:
+        cloud_event: The CloudEvent that was triggered by Pub/Sub.
+    """
+    run_job()
+    return 'OK'

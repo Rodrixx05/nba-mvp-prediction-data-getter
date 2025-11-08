@@ -1,4 +1,4 @@
-requests==2.32.2
+cloudscraper==1.2.71
 beautifulsoup4==4.12.3
 scikit-learn==1.5.2
 xgboost==2.1.1
@@ -8,3 +8,4 @@ lxml==4.9.4
 psycopg2-binary==2.9.10
 google-cloud-storage==2.18.2
 lightgbm==4.5.0
+functions-framework==3.0.0
