@@ -3,6 +3,7 @@ import os
 import re
 import pickle
 import functions_framework
+import traceback
 
 import pandas as pd
 from sklearn.pipeline import Pipeline
@@ -84,4 +85,5 @@ def pubsub_trigger(cloud_event):
         run_job()
     except Exception as e:
         print(f"Error capturado: {e}")
+        traceback.print_exc()
     return 'OK'
