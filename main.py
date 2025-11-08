@@ -34,7 +34,7 @@ def run_job():
     raw_df = getter.extract_player_stats_multiple(season, mvp = False, advanced = True, ranks = True)
 
     cols_tot_rank = [col for col in raw_df.columns if '_tot' in col or '_rank' in col]
-    cols_to_drop = ['G', 'GS', 'GT', 'Tm', 'FG_tot', '3PA_tot', '2PA_tot', 'FGA_rank_tot', 'Pos', 'Age', 'FGA_pg', 'FG%', '3P_pg', '3PA_pg', '3P%', '2PA_pg', '2P%', 'eFG%', 'FT%', 'ORB_pg', 'DRB_pg', 'PF_pg', 'TS%', '3PAr', 'FTr', 'ORB%', 'DRB%', 'TRB%', 'AST%', 'STL%', 'BLK%', 'TOV%', 'OBPM', 'DBPM']
+    cols_to_drop = ['G', 'GS', 'GT', 'Tm', 'Pos', 'Age', 'FGA_pg', 'FG%', '3P_pg', '3PA_pg', '3P%', '2PA_pg', '2P%', 'eFG%', 'FT%', 'ORB_pg', 'DRB_pg', 'PF_pg', 'TS%', '3PAr', 'FTr', 'ORB%', 'DRB%', 'TRB%', 'AST%', 'STL%', 'BLK%', 'TOV%', 'OBPM', 'DBPM']
     cols_to_drop += cols_tot_rank
     cols_to_drop.append('Trp-Dbl') if 'Trp-Dbl' in raw_df.columns else None
 
