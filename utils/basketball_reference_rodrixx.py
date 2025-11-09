@@ -11,6 +11,11 @@ class BasketballReferenceGetter():
     """
     def __init__(self):
         self.scraper = cloudscraper.create_scraper()
+        self.headers = {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+            'User-Agent': 'Mozilla/5.0'
+        }
 
     """
     Protected Functions
@@ -28,7 +33,7 @@ class BasketballReferenceGetter():
         Extracts the team record from the given season, in the form of W-L
         """
         url = f'https://www.basketball-reference.com/teams/{team}/{year}.html'
-        response = self.scraper.get(url)
+        response = self.scraper.get(url, headers = self.headers)
         if response.status_code != 200:
             return response.status_code
         soup = BeautifulSoup(response.text, features = "lxml")
@@ -42,7 +47,7 @@ class BasketballReferenceGetter():
         containing the season record for each team as the %W column, and also the total games played as GT
         """
         url = f"https://www.basketball-reference.com/leagues/NBA_{year}_standings.html"
-        response = self.scraper.get(url)
+        response = self.scraper.get(url, headers = self.headers)
         if response.status_code != 200:
             return response.status_code
         soup_html = BeautifulSoup(response.text, features = "lxml")
@@ -110,7 +115,7 @@ class BasketballReferenceGetter():
         return_list = []
         for year in self._years_list(years):
             url = f'https://www.basketball-reference.com/leagues/NBA_{year}_per_game.html'
-            response = self.scraper.get(url)
+            response = self.scraper.get(url, headers = self.headers)
             if response.status_code != 200:
                 return response.status_code
             response.encoding = 'utf-8'
@@ -155,7 +160,7 @@ class BasketballReferenceGetter():
         return_list = []
         for year in self._years_list(years):
             url = f'https://www.basketball-reference.com/leagues/NBA_{year}_totals.html'
-            response = self.scraper.get(url)
+            response = self.scraper.get(url, headers = self.headers)
             if response.status_code != 200:
                 return response.status_code
             response.encoding = 'utf-8'
@@ -198,7 +203,7 @@ class BasketballReferenceGetter():
         return_list = []
         for year in self._years_list(years):
             url = f'https://www.basketball-reference.com/leagues/NBA_{year}_advanced.html'
-            response = self.scraper.get(url)
+            response = self.scraper.get(url, headers = self.headers)
             if response.status_code != 200:
                 return response.status_code
             response.encoding = 'utf-8'
@@ -243,7 +248,7 @@ class BasketballReferenceGetter():
         return_list = []
         for year in self._years_list(years):
             url = f'https://www.basketball-reference.com/awards/awards_{year}.html#mvp'
-            response = self.scraper.get(url)
+            response = self.scraper.get(url, headers = self.headers)
             if response.status_code != 200:
                 return response.status_code
             response.encoding = 'utf-8'
