@@ -86,4 +86,4 @@ def pubsub_trigger(cloud_event):
     except Exception as e:
         print(f"Error capturado: {e}")
         traceback.print_exc()
-    return 'OK'
+    return ('OK', 204)
