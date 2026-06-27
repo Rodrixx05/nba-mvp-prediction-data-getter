@@ -2,8 +2,12 @@ from datetime import datetime, date
 import os
 import re
 import pickle
+import urllib.request
 import functions_framework
 import traceback
+
+import google.auth.transport.requests
+import google.oauth2.id_token
 
 import pandas as pd
 from sklearn.pipeline import Pipeline
@@ -72,6 +76,23 @@ def run_job():
     conn = create_engine(conn_url)
 
     final_df.to_sql(f'stats_predictions_{season}', conn, if_exists = 'append', index = False)
+
+    # Trigger backup function
+    backup_url = os.environ.get('BACKUP_FUNCTION_URL')
+    if backup_url:
+        print(f"Triggering backup function at {backup_url}")
+        try:
+            req = google.auth.transport.requests.Request()
+            id_token = google.oauth2.id_token.fetch_id_token(req, backup_url)
+            
+            headers = {'Authorization': f'Bearer {id_token}'}
+            request = urllib.request.Request(backup_url, headers=headers, method='POST')
+            with urllib.request.urlopen(request) as response:
+                print(f"Backup function response status: {response.status}")
+        except Exception as e:
+            print(f"Failed to trigger backup function: {e}")
+    else:
+        print("BACKUP_FUNCTION_URL environment variable not set, skipping backup trigger.")
 
 
 @functions_framework.cloud_event
